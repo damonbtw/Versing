@@ -55,6 +55,12 @@ local tracerEnabled = MainBox:AddToggle({
     Default = true
 })
 
+local tracerPosition = MainBox:AddDropdown({
+    Text = "Tracer Position",
+    Values = {"Bottom", "Top", "Middle", "Mouse", "Left", "Right"},
+    Default = 1
+})
+
 local healthbarEnabled = MainBox:AddToggle({
     Text = "Health Bar",
     Default = true
@@ -96,7 +102,7 @@ MainBox:AddBlank(3)
 MainBox:AddLabel("NPC Path: " .. _G.NPCPath, {160, 160, 170})
 
 --// Settings Tab
-local UIBox = SettingsTab:AddMiddleGroupbox("UI Customization")
+local UIBox = SettingsTab:AddLeftGroupbox("UI Customization")
 
 UIBox:AddTitle("Accent Color")
 UIBox:AddBlank(3)
@@ -136,29 +142,104 @@ UIBox:AddBlank(5)
 UIBox:AddBorder()
 UIBox:AddBlank(5)
 
-UIBox:AddButton("Reset to Red Theme", function()
+UIBox:AddButton("Reset to Red", function()
     redSlider:SetValue(220)
     greenSlider:SetValue(50)
     blueSlider:SetValue(60)
     Window.AccentColor = {220, 50, 60}
-    Lib:Notify("Theme reset to red!", 2)
+    Lib:Notify("Red theme!", 2)
 end)
 
-UIBox:AddButton("Set to Purple Theme", function()
+UIBox:AddButton("Purple Theme", function()
     redSlider:SetValue(150)
     greenSlider:SetValue(50)
     blueSlider:SetValue(200)
     Window.AccentColor = {150, 50, 200}
-    Lib:Notify("Theme set to purple!", 2)
+    Lib:Notify("Purple theme!", 2)
 end)
 
-UIBox:AddButton("Set to Blue Theme", function()
+UIBox:AddButton("Blue Theme", function()
     redSlider:SetValue(50)
     greenSlider:SetValue(120)
     blueSlider:SetValue(255)
     Window.AccentColor = {50, 120, 255}
-    Lib:Notify("Theme set to blue!", 2)
+    Lib:Notify("Blue theme!", 2)
 end)
+
+--// NPC Path Settings
+local PathBox = SettingsTab:AddRightGroupbox("NPC Path Finder")
+
+PathBox:AddTitle("Auto-Detect NPCs")
+PathBox:AddBlank(3)
+
+--// Function to scan for potential NPC folders
+local detectedPaths = {}
+
+local function ScanForNPCFolders()
+    detectedPaths = {}
+    
+    if not workspace then return {} end
+    
+    local workspaceChildren = dx9.GetChildren(workspace)
+    if not workspaceChildren then return {} end
+    
+    for _, child in ipairs(workspaceChildren) do
+        local childName = dx9.GetName(child)
+        local childChildren = dx9.GetChildren(child)
+        
+        if childChildren and #childChildren > 0 then
+            local hasNPCs = false
+            for _, subChild in ipairs(childChildren) do
+                local humanoid = dx9.FindFirstChild(subChild, "Humanoid")
+                if humanoid then
+                    hasNPCs = true
+                    break
+                end
+            end
+            
+            if hasNPCs then
+                table.insert(detectedPaths, "Workspace." .. childName)
+            end
+        end
+    end
+    
+    return detectedPaths
+end
+
+PathBox:AddButton("Scan Workspace", function()
+    local paths = ScanForNPCFolders()
+    
+    if #paths > 0 then
+        Lib:Notify("Found " .. #paths .. " folder(s)!", 2)
+        if pathDropdown then
+            pathDropdown:SetValues(paths)
+        end
+    else
+        Lib:Notify("No NPCs found!", 2, {255, 100, 100})
+    end
+end)
+
+PathBox:AddBlank(5)
+
+local commonPaths = {
+    "Workspace.Entities",
+    "Workspace.NPCs", 
+    "Workspace.Mobs",
+    "Workspace.Enemies"
+}
+
+pathDropdown = PathBox:AddDropdown({
+    Text = "NPC Path",
+    Values = commonPaths,
+    Default = 1
+}):OnChanged(function(value)
+    _G.NPCPath = value
+    Lib:Notify("Path: " .. value, 2)
+end)
+
+PathBox:AddBlank(5)
+PathBox:AddLabel("Active Path:", {160, 160, 170})
+PathBox:AddLabel(_G.NPCPath, {100, 255, 100})
 
 --// Get workspace
 local workspace = dx9.FindFirstChild(dx9.GetDatamodel(), "Workspace")
@@ -336,8 +417,29 @@ function BoxESP(params)
 
     -- Tracer
     if tracerEnabled.Value then
-        local screenCenterBottom = {dx9.size().width / 2, dx9.size().height}
-        dx9.DrawLine(screenCenterBottom, {Top.x, Bottom.y}, box_color)
+        local tracerStart
+        local screenW = dx9.size().width
+        local screenH = dx9.size().height
+        
+        -- Determine tracer start position based on selection
+        if tracerPosition.Value == "Bottom" then
+            tracerStart = {screenW / 2, screenH}
+        elseif tracerPosition.Value == "Top" then
+            tracerStart = {screenW / 2, 0}
+        elseif tracerPosition.Value == "Middle" then
+            tracerStart = {screenW / 2, screenH / 2}
+        elseif tracerPosition.Value == "Mouse" then
+            local mouse = dx9.GetMouse()
+            tracerStart = {mouse.x, mouse.y}
+        elseif tracerPosition.Value == "Left" then
+            tracerStart = {0, screenH / 2}
+        elseif tracerPosition.Value == "Right" then
+            tracerStart = {screenW, screenH / 2}
+        else
+            tracerStart = {screenW / 2, screenH} -- Default to bottom
+        end
+        
+        dx9.DrawLine(tracerStart, {Top.x, Bottom.y}, box_color)
     end
 end
 
