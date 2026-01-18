@@ -3,14 +3,6 @@ loadstring(dx9.Get("https://raw.githubusercontent.com/damonbtw/Versing/main/vers
 
 
 
---// Change this for the game you're playing
-_G.NPCPath = "Workspace.Characters"
+_G.NPCPath = "Workspace.Characters"    -- yo nigga put the npc path here
 
---// Load the universal ESP UI
-loadstring(dx9.Get("https://raw.githubusercontent.com/soupg/DXLibUI/main/main.lua"))()
-
-
-
-_G.NPCPath = "Workspace.Characters"
-
-loadstring(dx9.Get("https://raw.githubusercontent.com/soupg/DXLibUI/main/main.lua"))()
+loadstring(dx9.Get("https://raw.githubusercontent.com/damonbtw/Versing/main/versing.lua"))()
