@@ -23,7 +23,8 @@ local Window = Lib:CreateWindow({
 })
 
 --// Create Tabs
-local Tab = Window:AddTab("ESP Settings")
+local Tab = Window:AddTab("Esp")
+local MiscTab = Window:AddTab("Misc")
 local SettingsTab = Window:AddTab("Settings")
 
 --// Main ESP Settings Groupbox
@@ -42,7 +43,7 @@ local boxEnabled = MainBox:AddToggle({
 
 local box2D = MainBox:AddToggle({
     Text = "2D Box (not corner)",
-    Default = false
+    Default = true
 })
 
 local skeletonEnabled = MainBox:AddToggle({
@@ -52,7 +53,7 @@ local skeletonEnabled = MainBox:AddToggle({
 
 local tracerEnabled = MainBox:AddToggle({
     Text = "Tracers",
-    Default = true
+    Default = false
 })
 
 local tracerPosition = MainBox:AddDropdown({
@@ -78,10 +79,10 @@ local dynamicHealthColor = MainBox:AddToggle({
 
 MainBox:AddBlank(5)
 
---// Color Picker
+--// Color Picker - bright cyan
 local colorPicker = MainBox:AddColorPicker({
     Text = "ESP Color",
-    Default = {255, 80, 85}
+    Default = {0, 255, 255}
 })
 
 MainBox:AddBlank(5)
@@ -101,13 +102,11 @@ MainBox:AddBorder()
 MainBox:AddBlank(3)
 MainBox:AddLabel("NPC Path: " .. _G.NPCPath, {160, 160, 170})
 
---// Settings Tab
+-- Settings Tab UI Customization (unchanged)
 local UIBox = SettingsTab:AddLeftGroupbox("UI Customization")
-
 UIBox:AddTitle("Accent Color")
 UIBox:AddBlank(3)
 
---// RGB Sliders for accent color
 local redSlider = UIBox:AddSlider({
     Text = "Red",
     Min = 0,
@@ -166,13 +165,11 @@ UIBox:AddButton("Blue Theme", function()
     Lib:Notify("Blue theme!", 2)
 end)
 
---// NPC Path Settings
+-- NPC Path Finder (unchanged)
 local PathBox = SettingsTab:AddRightGroupbox("NPC Path Finder")
-
 PathBox:AddTitle("Auto-Detect NPCs")
 PathBox:AddBlank(3)
 
---// Function to scan for potential NPC folders
 local detectedPaths = {}
 
 local function ScanForNPCFolders()
@@ -240,6 +237,14 @@ end)
 PathBox:AddBlank(5)
 PathBox:AddLabel("Active Path:", {160, 160, 170})
 PathBox:AddLabel(_G.NPCPath, {100, 255, 100})
+
+-- Misc Tab with watermark toggle
+local MiscBox = MiscTab:AddMiddleGroupbox("Misc Options")
+
+local watermarkEnabled = MiscBox:AddToggle({
+    Text = "Show Watermark (Damon <3)",
+    Default = true
+})
 
 --// Get workspace
 local workspace = dx9.FindFirstChild(dx9.GetDatamodel(), "Workspace")
@@ -336,12 +341,10 @@ function BoxESP(params)
     local height = Bottom.y - Top.y
     local width = height / 2.4
 
-    -- Skeleton ESP
     if skeletonEnabled.Value then
         DrawSkeleton(target, box_color)
     end
 
-    -- Box ESP
     if boxEnabled.Value then
         if box2D.Value then
             dx9.DrawBox({Top.x - width, Top.y}, {Top.x + width, Bottom.y}, box_color)
@@ -362,15 +365,12 @@ function BoxESP(params)
         end
     end
 
-    -- Distance
     local dist_str = tostring(dist) .. " studs"
     dx9.DrawString({Bottom.x - (dx9.CalcTextWidth(dist_str) / 2), Bottom.y + 4}, box_color, dist_str)
 
-    -- Name
     local name = dx9.GetName(target) or "NPC"
     dx9.DrawString({Top.x - (dx9.CalcTextWidth(name) / 2), Top.y - 20}, box_color, name)
 
-    -- Health
     local humanoid = dx9.FindFirstChild(target, "Humanoid")
     local hp = 100
     local maxhp = 100
@@ -379,13 +379,11 @@ function BoxESP(params)
         maxhp = dx9.GetMaxHealth(humanoid) or 100
     end
 
-    -- Health Text
     if healthtextEnabled.Value then
         local h_str = math.floor(hp) .. "/" .. math.floor(maxhp)
         dx9.DrawString({Top.x - (dx9.CalcTextWidth(h_str) / 2), Top.y - 38}, box_color, h_str)
     end
 
-    -- Health Bar
     if healthbarEnabled.Value and maxhp > 0 then
         local barWidth = 4
         local barPadding = 2
@@ -415,13 +413,11 @@ function BoxESP(params)
         end
     end
 
-    -- Tracer
     if tracerEnabled.Value then
         local tracerStart
         local screenW = dx9.size().width
         local screenH = dx9.size().height
         
-        -- Determine tracer start position based on selection
         if tracerPosition.Value == "Bottom" then
             tracerStart = {screenW / 2, screenH}
         elseif tracerPosition.Value == "Top" then
@@ -436,14 +432,14 @@ function BoxESP(params)
         elseif tracerPosition.Value == "Right" then
             tracerStart = {screenW, screenH / 2}
         else
-            tracerStart = {screenW / 2, screenH} -- Default to bottom
+            tracerStart = {screenW / 2, screenH}
         end
         
         dx9.DrawLine(tracerStart, {Top.x, Bottom.y}, box_color)
     end
 end
 
---// Main ESP loop
+--// Main ESP + Watermark loop (watermark now very high up at y=5)
 coroutine.wrap(function()
     while true do
         if espEnabled.Value then
@@ -458,6 +454,28 @@ coroutine.wrap(function()
                 end
             end
         end
+        
+        -- Watermark: super high at top (y=5), thick outline, centered
+        if watermarkEnabled.Value then
+            local screenW = dx9.size().width
+            local text = "Damon <3"
+            local textWidth = dx9.CalcTextWidth(text)
+            local x = (screenW - textWidth) / 2
+            local y = 5  -- Very top (was 20, now much higher)
+            
+            -- Thick black outline (multiple layers for max visibility)
+            for dx = -4, 4, 2 do
+                for dy = -4, 4, 2 do
+                    if dx ~= 0 or dy ~= 0 then
+                        dx9.DrawString({x + dx, y + dy}, {0, 0, 0}, text)
+                    end
+                end
+            end
+            
+            -- Bright red main text
+            dx9.DrawString({x, y}, {255, 0, 0}, text)
+        end
+        
         dx9.Sleep(0)
     end
 end)()
