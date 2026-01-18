@@ -185,7 +185,33 @@ local pathDropdown = PathBox:AddDropdown({
     Default = 1
 }):OnChanged(function(value)
     _G.NPCPath = value
-    Lib:Notify("Path: " .. value, 2)
+    Lib:Notify("Path changed to: " .. value, 3, {100, 255, 100})
+    
+    -- Force refresh by testing the path
+    local testFolder = GetObjectFromPath(value)
+    if testFolder then
+        local children = dx9.GetChildren(testFolder)
+        if children then
+            Lib:Notify("Found " .. #children .. " entities!", 2, {100, 255, 100})
+        else
+            Lib:Notify("Path exists but empty!", 2, {255, 200, 100})
+        end
+    else
+        Lib:Notify("Path not found in this game!", 3, {255, 100, 100})
+    end
+end)
+
+PathBox:AddBlank(5)
+
+-- Custom path input
+PathBox:AddLabel("Or enter custom path:", {160, 160, 170})
+PathBox:AddBlank(3)
+
+PathBox:AddButton("Set Custom Path", function()
+    -- For now, you'd need to edit _G.NPCPath manually
+    -- DXLib doesn't have text input, so you'd set it in code like:
+    -- _G.NPCPath = "Workspace.Your.Custom.Path"
+    Lib:Notify("Edit _G.NPCPath in code for custom paths", 3, {255, 200, 100})
 end)
 
 PathBox:AddBlank(5)
