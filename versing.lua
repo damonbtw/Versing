@@ -2,7 +2,7 @@ dx9.ShowConsole(false)
 
 --// Check if NPC path is provided
 if not _G.NPCPath then
-    _G.NPCPath = "Workspace.Entities" -- Default fallback
+    _G.NPCPath = "Workspace.WorldInfo.Live" -- Default to your game
 end
 
 --// Load the DXLib UI library
@@ -10,7 +10,7 @@ local Lib = loadstring(dx9.Get("https://raw.githubusercontent.com/soupg/DXLibUI/
 
 --// Create Window with dark red theme
 local Window = Lib:CreateWindow({
-    Title = "PRINCE UNIVERSAL ESP - @crossmyheart0551 👑",
+    Title = "Damon your beloved , @crossmyheart0551",
     Size = {600, 500},
     Resizable = false,
     ToggleKey = "[F5]",
@@ -102,7 +102,7 @@ MainBox:AddBorder()
 MainBox:AddBlank(3)
 MainBox:AddLabel("NPC Path: " .. _G.NPCPath, {160, 160, 170})
 
--- Settings Tab UI Customization (unchanged)
+-- Settings Tab UI Customization
 local UIBox = SettingsTab:AddLeftGroupbox("UI Customization")
 UIBox:AddTitle("Accent Color")
 UIBox:AddBlank(3)
@@ -165,69 +165,23 @@ UIBox:AddButton("Blue Theme", function()
     Lib:Notify("Blue theme!", 2)
 end)
 
--- NPC Path Finder (unchanged)
-local PathBox = SettingsTab:AddRightGroupbox("NPC Path Finder")
-PathBox:AddTitle("Auto-Detect NPCs")
+-- NPC Path Finder
+local PathBox = SettingsTab:AddRightGroupbox("NPC Path Selection")
+PathBox:AddTitle("Select NPC Path")
 PathBox:AddBlank(3)
 
-local detectedPaths = {}
-
-local function ScanForNPCFolders()
-    detectedPaths = {}
-    
-    if not workspace then return {} end
-    
-    local workspaceChildren = dx9.GetChildren(workspace)
-    if not workspaceChildren then return {} end
-    
-    for _, child in ipairs(workspaceChildren) do
-        local childName = dx9.GetName(child)
-        local childChildren = dx9.GetChildren(child)
-        
-        if childChildren and #childChildren > 0 then
-            local hasNPCs = false
-            for _, subChild in ipairs(childChildren) do
-                local humanoid = dx9.FindFirstChild(subChild, "Humanoid")
-                if humanoid then
-                    hasNPCs = true
-                    break
-                end
-            end
-            
-            if hasNPCs then
-                table.insert(detectedPaths, "Workspace." .. childName)
-            end
-        end
-    end
-    
-    return detectedPaths
-end
-
-PathBox:AddButton("Scan Workspace", function()
-    local paths = ScanForNPCFolders()
-    
-    if #paths > 0 then
-        Lib:Notify("Found " .. #paths .. " folder(s)!", 2)
-        if pathDropdown then
-            pathDropdown:SetValues(paths)
-        end
-    else
-        Lib:Notify("No NPCs found!", 2, {255, 100, 100})
-    end
-end)
-
-PathBox:AddBlank(5)
-
-local commonPaths = {
-    "Workspace.Entities",
-    "Workspace.NPCs", 
-    "Workspace.Mobs",
-    "Workspace.Enemies"
-}
-
-pathDropdown = PathBox:AddDropdown({
+local pathDropdown = PathBox:AddDropdown({
     Text = "NPC Path",
-    Values = commonPaths,
+    Values = {
+        "Workspace.WorldInfo.Live",
+        "Workspace.Characters",
+        "Workspace.Character",
+        "Workspace.Enemies",
+        "Workspace.Enemy",
+        "Workspace.Entities",
+        "Workspace.NPCs", 
+        "Workspace.Mobs"
+    },
     Default = 1
 }):OnChanged(function(value)
     _G.NPCPath = value
@@ -439,7 +393,7 @@ function BoxESP(params)
     end
 end
 
---// Main ESP + Watermark loop (watermark now very high up at y=5)
+--// Main ESP + Watermark loop
 coroutine.wrap(function()
     while true do
         if espEnabled.Value then
@@ -455,15 +409,15 @@ coroutine.wrap(function()
             end
         end
         
-        -- Watermark: super high at top (y=5), thick outline, centered
+        -- Watermark
         if watermarkEnabled.Value then
             local screenW = dx9.size().width
             local text = "Damon <3"
             local textWidth = dx9.CalcTextWidth(text)
             local x = (screenW - textWidth) / 2
-            local y = 5  -- Very top (was 20, now much higher)
+            local y = 5
             
-            -- Thick black outline (multiple layers for max visibility)
+            -- Thick black outline
             for dx = -4, 4, 2 do
                 for dy = -4, 4, 2 do
                     if dx ~= 0 or dy ~= 0 then
