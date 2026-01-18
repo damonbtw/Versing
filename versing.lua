@@ -6,7 +6,7 @@ if not _G.NPCPath then
 end
 
 --// Load the DXLib UI library
-local Lib = loadstring(dx9.Get("https://raw.githubusercontent.com/soupg/DXLibUI/main/main.lua"))()
+local Lib = loadstring(dx9.Get("https://raw.githubusercontent.com/damonbtw/WHATISASKID/refs/heads/main/skiddingwhattt.lua"))()
 
 --// Create Window with dark red theme
 local Window = Lib:CreateWindow({
