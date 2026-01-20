@@ -32,7 +32,7 @@ local MainBox = Tab:AddMiddleGroupbox("ESP Configuration")
 
 local espEnabled = MainBox:AddToggle({ Text = "ESP Enabled", Default = true })
 
-local nameEnabled = MainBox:AddToggle({ Text = "Name ESP", Default = true })  -- Added
+local nameEnabled = MainBox:AddToggle({ Text = "Name ESP", Default = true })
 
 local boxEnabled = MainBox:AddToggle({ Text = "Box ESP", Default = true })
 
@@ -56,7 +56,18 @@ local dynamicHealthColor = MainBox:AddToggle({ Text = "Dynamic Health Color", De
 
 MainBox:AddBlank(5)
 
+-- NEW: Distance Toggle
+local showDistance = MainBox:AddToggle({ Text = "Show Distance", Default = true })
+
+-- NEW: Team Check
+local teamCheck = MainBox:AddToggle({ Text = "Team Check (Hide Teammates)", Default = false })
+
+MainBox:AddBlank(5)
+
 local colorPicker = MainBox:AddColorPicker({ Text = "ESP Color", Default = {0, 255, 255} })
+
+-- NEW: Teammate Color
+local teamColor = MainBox:AddColorPicker({ Text = "Teammate Color", Default = {100, 255, 100} })
 
 MainBox:AddBlank(5)
 
@@ -182,7 +193,9 @@ local watermarkEnabled = MiscBox:AddToggle({
 })
 
 --// ── Core Functions ────────────────────────────────────────────────────────
-local workspace = dx9.FindFirstChild(dx9.GetDatamodel(), "Workspace")
+local datamodel = dx9.GetDatamodel()
+local workspace = dx9.FindFirstChild(datamodel, "Workspace")
+local PlayersService = dx9.FindFirstChild(datamodel, "Players")
 
 function GetObjectFromPath(pathString)
     if not pathString or pathString == "" then return nil end
@@ -212,6 +225,43 @@ function GetDistanceFromPlayer(v)
     return math.floor(math.sqrt(a) + 0.5)
 end
 
+-- NEW: Team Check Function
+function IsTeammate(targetName)
+    if not teamCheck.Value or not PlayersService then return false end
+    
+    local lp = dx9.get_localplayer()
+    if not lp or not lp.Info then return false end
+    
+    local localPlayerName = lp.Info.name
+    if not localPlayerName then return false end
+    
+    -- Get local player's team
+    local localTeam = nil
+    local targetTeam = nil
+    
+    local players = dx9.GetChildren(PlayersService)
+    if not players then return false end
+    
+    for _, playerObj in ipairs(players) do
+        local playerName = dx9.GetName(playerObj)
+        
+        if playerName == localPlayerName then
+            localTeam = dx9.GetTeam(playerObj)
+        end
+        
+        if playerName == targetName then
+            targetTeam = dx9.GetTeam(playerObj)
+        end
+    end
+    
+    -- If both have teams and they match, they're teammates
+    if localTeam and targetTeam and localTeam == targetTeam then
+        return true
+    end
+    
+    return false
+end
+
 function DrawSkeleton(character, color)
     local connections = {
         {"Head", "Torso"}, {"Torso", "Left Arm"}, {"Torso", "Right Arm"},
@@ -236,7 +286,6 @@ end
 
 function BoxESP(params)
     local target = params.Target
-    local box_color = colorPicker.Value
     
     if type(target) ~= "number" or dx9.GetChildren(target) == nil then return end
     
@@ -248,6 +297,17 @@ function BoxESP(params)
     
     local dist = GetDistanceFromPlayer(torso)
     if dist > distSlider.Value then return end
+    
+    local targetName = dx9.GetName(target)
+    
+    -- NEW: Check if teammate and skip if team check is enabled
+    local isTeammate = IsTeammate(targetName)
+    if teamCheck.Value and isTeammate then
+        return -- Skip teammates
+    end
+    
+    -- NEW: Use teammate color if they're on our team
+    local box_color = isTeammate and teamColor.Value or colorPicker.Value
     
     local HeadPosY = torso.y + 3
     local LegPosY = torso.y - 3.5
@@ -282,11 +342,14 @@ function BoxESP(params)
         end
     end
     
-    local dist_str = tostring(dist) .. " studs"
-    dx9.DrawString({Bottom.x - (dx9.CalcTextWidth(dist_str)/2), Bottom.y + 4}, box_color, dist_str)
+    -- NEW: Only show distance if toggle is enabled
+    if showDistance.Value then
+        local dist_str = tostring(dist) .. " studs"
+        dx9.DrawString({Bottom.x - (dx9.CalcTextWidth(dist_str)/2), Bottom.y + 4}, box_color, dist_str)
+    end
     
     if nameEnabled.Value then
-        local name = dx9.GetName(target) or "NPC"
+        local name = targetName or "NPC"
         dx9.DrawString({Top.x - (dx9.CalcTextWidth(name)/2), Top.y - 20}, box_color, name)
     end
     
