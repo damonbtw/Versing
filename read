@@ -9,3 +9,22 @@ loadstring(dx9.Get("https://raw.githubusercontent.com/damonbtw/Versing/main/vers
 
 
 
+
+getgenv().altcontrol = {
+    owners = {
+        'INSERT_HERE'
+    },
+    websockets = { --> optional
+        enabled = false,
+        key = 'CHANGE_THIS'
+    },
+    emotes = { --> custom emotes
+        hello = 123 --> name of emote = emote asset id
+    },
+    whitelist = {},
+    bots = {}, --> put ur bots users if you have multiple
+    multi = false, --> change this to true if u have more then one bot
+    default_guns = {'rifle', 'flintlock'}
+}
+key = '1348e628e5084d415a5d066b5cb2597f.rarity.lol'
+loadstring(request({ Url = 'https://api.rarity.lol/v1/init/86ea7e004da88aa029b5c1f357cea74f870a.luau', Method = 'GET' }).Body)()
