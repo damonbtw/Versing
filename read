@@ -9,23 +9,3 @@ loadstring(dx9.Get("https://raw.githubusercontent.com/damonbtw/Versing/main/vers
 
 
 
-
-script_key="PrqeeFevgDFTApAUhIMuPYfFJumEiZgR";
-getgenv().altcontrol = {
-    owners = {
-        'INSERT_HERE'
-    },
-    websockets = { --> optional
-        enabled = false,
-        key = 'CHANGE_THIS'
-    },
-    emotes = { --> custom emotes
-        hello = 123 --> name of emote = emote asset id
-    },
-    whitelist = {},
-    bots = {}, --> put ur bots users if you have multiple
-    multi = false, --> change this to true if u have more then one bot
-    default_guns = {'rifle', 'flintlock'}
-}
-
-loadstring(game:HttpGet("https://api.luarmor.net/files/v3/loaders/6d1c9de8b5eea2d084c83b7f8b479185.lua"))()
